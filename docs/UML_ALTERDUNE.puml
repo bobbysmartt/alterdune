@@ -1,0 +1,165 @@
+@startuml ALTERDUNE
+
+skinparam classAttributeIconSize 0
+skinparam style strictuml
+
+abstract class Entite {
+    # nom : string
+    # hp : int
+    # hpMax : int
+    --
+    + getNom() : string
+    + getHp() : int
+    + getHpMax() : int
+    + setHp(int)
+    + estVivant() : bool
+    + subirDegats(int)
+    + soigner(int)
+    + {abstract} afficherStats()
+}
+
+class Joueur {
+    - nbTues : int
+    - nbEpargnes : int
+    - nbVictoires : int
+    - inventaire : vector<Item>
+    --
+    + getNbTues() : int
+    + getNbEpargnes() : int
+    + getNbVictoires() : int
+    + ajouterVictoire(bool)
+    + ajouterItem(Item)
+    + getInventaire() : vector<Item>&
+    + afficherStats()
+    + afficherInventaire()
+    + utiliserItem(int) : bool
+}
+
+class Monstre {
+    # categorie : Categorie
+    # atk : int
+    # def : int
+    # mercy : int
+    # mercyGoal : int
+    # actIds : vector<string>
+    --
+    + getCategorie() : Categorie
+    + getAtk() : int
+    + getMercy() : int
+    + modifierMercy(int)
+    + mercyAtteint() : bool
+    + categorieToString() : string
+    + nbActionsDisponibles() : int
+    + afficherStats()
+}
+
+enum Categorie {
+    NORMAL
+    MINIBOSS
+    BOSS
+}
+
+class Item {
+    - nom : string
+    - type : string
+    - valeur : int
+    - quantite : int
+    --
+    + getNom() : string
+    + getType() : string
+    + getValeur() : int
+    + getQuantite() : int
+    + utiliser() : bool
+    + afficher()
+}
+
+struct ActAction {
+    + id : string
+    + texte : string
+    + impactMercy : int
+}
+
+class Catalogue {
+    - actions : map<string, ActAction>
+    --
+    + exists(string) : bool
+    + get(string) : ActAction&
+}
+
+class Bestiaire {
+    - entrees : vector<EntreeBestiaire>
+    --
+    + ajouter(Monstre, bool)
+    + afficher()
+    + estVide() : bool
+}
+
+struct EntreeBestiaire {
+    + monstre : Monstre
+    + tue : bool
+}
+
+class Combat {
+    - joueur : Joueur&
+    - monstre : Monstre&
+    - catalogue : Catalogue&
+    --
+    + lancer() : ResultatCombat
+    - tirerDegats(int) : int
+    - tourMonstre()
+    - actionFight() : ResultatCombat
+    - actionAct() : ResultatCombat
+    - actionItem() : ResultatCombat
+    - actionMercy() : ResultatCombat
+}
+
+enum ResultatCombat {
+    VICTOIRE_TUE
+    VICTOIRE_EPARGNE
+    DEFAITE
+}
+
+class Chargeur {
+    + {static} chargerItems(string) : vector<Item>
+    + {static} chargerMonstres(string, Catalogue) : vector<Monstre>
+    - {static} split(string, char) : vector<string>
+    - {static} trim(string) : string
+}
+
+class Jeu {
+    - joueur : Joueur*
+    - monstresDisponibles : vector<Monstre>
+    - catalogue : Catalogue
+    - bestiaire : Bestiaire
+    --
+    + demarrer()
+    - menuPrincipal()
+    - lancerCombat()
+    - afficherBestiaire()
+    - afficherStats()
+    - menuItems()
+    - afficherFin()
+    - choisirMonstre() : Monstre&
+}
+
+Entite <|-- Joueur
+Entite <|-- Monstre
+Monstre --> Categorie
+Joueur "1" *-- "0..*" Item
+Catalogue "1" *-- "1..*" ActAction
+Monstre --> Catalogue : utilise
+Bestiaire "1" *-- "0..*" EntreeBestiaire
+EntreeBestiaire --> Monstre
+Combat --> Joueur
+Combat --> Monstre
+Combat --> Catalogue
+Combat --> ResultatCombat
+Jeu --> Joueur
+Jeu "1" *-- "1" Catalogue
+Jeu "1" *-- "1" Bestiaire
+Jeu "1" *-- "0..*" Monstre
+Jeu --> Combat : cree
+Chargeur ..> Item : produit
+Chargeur ..> Monstre : produit
+
+@enduml
